@@ -1,0 +1,15 @@
+version: '3.8'
+services:
+  cdpo-database:
+    image: postgres:latest
+    network_mode: bridge
+    container_name: cdpo-database
+    expose:
+      - 5440
+    ports:
+      - "5440:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=admin
+      - POSTGRES_DB=cdpo
+    restart: unless-stopped
