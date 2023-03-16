@@ -1,12 +1,14 @@
 package lsdi.cdpo.Connectors;
 
 import lsdi.cdpo.DataTransferObjects.EpnRequestResponse;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 @Service
 public class ContextMatcherConnector {
-    private final String url = "http://localhost:8980/";
+    @Value("${contextmatcher.url}")
+    private String url;
 
     private final RestTemplate restTemplate = new RestTemplate();
 
