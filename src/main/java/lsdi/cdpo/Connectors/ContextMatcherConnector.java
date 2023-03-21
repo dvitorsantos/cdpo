@@ -13,7 +13,7 @@ public class ContextMatcherConnector {
     private final RestTemplate restTemplate = new RestTemplate();
 
     public String getUrl() {
-        return this.url;
+        return "http://contextmatcher:8080/";
     }
 
     public EpnRequestResponse findMatchesToEpn(EpnRequestResponse epn) {

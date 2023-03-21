@@ -15,7 +15,7 @@ public class IoTCatalogerConnector {
     private final RestTemplate restTemplate = new RestTemplate();
 
     public String getUrl() {
-        return this.url;
+        return "http://iotcataloguer:8080/";
     }
 
     public IoTGatewayRequestResponse getGateway(String uuid) {
