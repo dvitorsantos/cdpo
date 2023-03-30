@@ -32,6 +32,10 @@ public class RuleRequestResponse {
     @JsonProperty("event_attributes")
     Map<String, String> eventAttributes;
 
+    @Nullable
+    @JsonProperty("webhook_url")
+    String webhookUrl;
+
     public Rule toEntity(){
         Rule rule = new Rule();
         rule.setUuid(this.uuid);

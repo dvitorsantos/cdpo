@@ -1,4 +1,4 @@
-package lsdi.cdpo.DataTransferObjects;
+package lsdi.cdpo.DataTransferObjects.Deploy;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
@@ -13,4 +13,8 @@ public class DeployResponse {
     public String deployUuid;
     @JsonProperty("rule_uuid")
     public String ruleUuid;
+    @JsonProperty("status")
+    public String status;
+    @JsonProperty("host_uuid")
+    public String hostUuid;
 }

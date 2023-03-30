@@ -14,4 +14,6 @@ public interface DeployRepository extends JpaRepository<Deploy, String> {
             "JOIN EventProcessNetwork epn ON rule.eventProcessNetwork.uuid = epn.uuid " +
             "WHERE epn.commitId = ?1")
     List<Deploy> findAllByEpnCommitId(String epnUuid);
+
+    Deploy findByRuleUuid(String ruleUuid);
 }
