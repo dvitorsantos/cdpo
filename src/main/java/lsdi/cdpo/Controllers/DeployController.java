@@ -2,8 +2,12 @@ package lsdi.cdpo.Controllers;
 
 import lsdi.cdpo.Connectors.ContextMatcherConnector;
 
+import lsdi.cdpo.DataTransferObjects.Deploy.DeployEdgeRequest;
+import lsdi.cdpo.DataTransferObjects.Deploy.DeployFogRequest;
 import lsdi.cdpo.DataTransferObjects.Deploy.DeployResponse;
 import lsdi.cdpo.DataTransferObjects.EpnRequestResponse;
+import lsdi.cdpo.DataTransferObjects.RuleRequestResponse;
+import lsdi.cdpo.DataTransferObjects.Undeploy.UndeployFogRequest;
 import lsdi.cdpo.Entities.Deploy;
 import lsdi.cdpo.Entities.EventProcessNetwork;
 import lsdi.cdpo.Services.DeployService;
@@ -11,6 +15,7 @@ import lsdi.cdpo.Services.EventProcessNetworkService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -35,11 +40,54 @@ public class DeployController {
         return epnRequestResponse;
     }
 
+
     @PostMapping("/undeploy/{epnCommitId}")
     public void undeploy(@PathVariable String epnCommitId) {
         List<Deploy> deploys = deployService.findAllByEpnCommitId(epnCommitId);
         deployService.undeploy(deploys);
     }
+
+    @PostMapping("/undeploy/rule/{ruleUuid}")
+    public void undeployRule(@PathVariable String ruleUuid) {
+        Deploy deploy = deployService.findByRuleUuid(ruleUuid);
+        deploy.setStatus("UNDEPLOYED");
+        UndeployFogRequest undeployFogRequest = new UndeployFogRequest();
+        if (deploy.getParentHostUuid() != null) {
+            undeployFogRequest.setHostUuid(deploy.getParentHostUuid());
+            undeployFogRequest.setFogRulesDeployUuids(new ArrayList<>());
+            undeployFogRequest.setEdgeRulesDeployUuids(new ArrayList<>(List.of(deploy.getDeployUuid())));
+        } else {
+            undeployFogRequest.setHostUuid(deploy.getHostUuid());
+            undeployFogRequest.setFogRulesDeployUuids(new ArrayList<>(List.of(deploy.getDeployUuid())));
+            undeployFogRequest.setEdgeRulesDeployUuids(new ArrayList<>());
+        }
+        deployService.undeploy(undeployFogRequest);
+        deployService.save(deploy);
+    }
+
+    @PostMapping("/deploy/rule/{ruleUuid}")
+    public RuleRequestResponse deployRule(@PathVariable String ruleUuid) {
+        Deploy deploy = deployService.findByRuleUuid(ruleUuid);
+        deploy.setStatus("DEPLOYED");
+        DeployFogRequest deployFogRequest = new DeployFogRequest();
+        RuleRequestResponse ruleRequestResponse = contextMatcherConnector.findRule(ruleUuid);
+        if (deploy.getParentHostUuid() != null) {
+            DeployEdgeRequest deployEdgeRequest = new DeployEdgeRequest();
+            deployEdgeRequest.setEdgeRules(new ArrayList<>(List.of(ruleRequestResponse)));
+            deployFogRequest.setHostUuid(deploy.getParentHostUuid());
+            deployFogRequest.setEdgeRulesDeployRequests(new ArrayList<>(List.of(deployEdgeRequest)));
+            deployFogRequest.setFogRules(new ArrayList<>());
+        } else {
+            deployFogRequest.setHostUuid(deploy.getHostUuid());
+            deployFogRequest.setEdgeRulesDeployRequests(new ArrayList<>());
+            deployFogRequest.setFogRules(new ArrayList<>(List.of(ruleRequestResponse)));
+        }
+
+        deployService.deploy(deployFogRequest);
+        deployService.save(deploy);
+        return ruleRequestResponse;
+    }
+
 
     @PutMapping("/deploy/{ruleUuid}")
     public Deploy updateDeploy(@PathVariable String ruleUuid, @RequestBody DeployResponse deployResponse) {

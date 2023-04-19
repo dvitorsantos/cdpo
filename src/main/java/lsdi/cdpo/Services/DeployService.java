@@ -6,6 +6,7 @@ import lsdi.cdpo.DataTransferObjects.Deploy.DeployEdgeRequest;
 import lsdi.cdpo.DataTransferObjects.Deploy.DeployFogRequest;
 import lsdi.cdpo.DataTransferObjects.Deploy.DeployResponse;
 import lsdi.cdpo.DataTransferObjects.Undeploy.UndeployFogRequest;
+import lsdi.cdpo.DataTransferObjects.Undeploy.UndeployRequest;
 import lsdi.cdpo.Entities.Deploy;
 import lsdi.cdpo.Repositories.DeployRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +22,8 @@ public class DeployService {
 
     @Autowired
     DeployRepository deployRepository;
+
+    RestTemplate restTemplate = new RestTemplate();
 
     public void deploy(EpnRequestResponse eventProcessNetwork) {
         List<MatchRequestResponse> matchRequestResponses = eventProcessNetwork.getMatches();
@@ -42,37 +45,6 @@ public class DeployService {
             }
         }
 
-        List<DeployFogRequest> deployFogRequests = new ArrayList<>();
-        List<DeployEdgeRequest> deployEdgeRequests = new ArrayList<>();
-
-        deployMap.forEach((hostUuid, rules) -> {
-            String level = rules.get(0).getLevel();
-            if (level.equals("FOG")) {
-                DeployFogRequest deployFogRequest = new DeployFogRequest();
-                deployFogRequest.setHostUuid(hostUuid);
-                deployFogRequest.setFogRules(rules);
-                rules.forEach(rule -> {
-                    if (rule.getLevel().equals(rule.getTarget())) rule.setWebhookUrl(eventProcessNetwork.getWebhookUrl());
-                });
-                deployFogRequests.add(deployFogRequest);
-            } else if (level.equals("EDGE")) {
-                DeployEdgeRequest deployEdgeRequest = new DeployEdgeRequest();
-                deployEdgeRequest.setHostUuid(hostUuid);
-                deployEdgeRequest.setEdgeRules(rules);
-                rules.forEach(rule -> {
-                    if (rule.getLevel().equals(rule.getTarget())) rule.setWebhookUrl(eventProcessNetwork.getWebhookUrl());
-                });
-                deployEdgeRequests.add(deployEdgeRequest);
-            } else if (level.equals("CLOUD")) {
-                //TODO cloud deploy
-            }
-        });
-
-        //setting edge deploy requests to fog deploy requests
-        deployFogRequests.forEach(deployFogRequest -> {
-            deployFogRequest.setEdgeRulesDeployRequests(deployEdgeRequests);
-        });
-
         //creating deploy entities
         List<Deploy> deploys = new ArrayList<>();
         deployMap.forEach((hostUuid, rules) -> {
@@ -86,21 +58,49 @@ public class DeployService {
             });
         });
 
+        List<DeployFogRequest> deployFogRequests = new ArrayList<>();
+        List<DeployEdgeRequest> deployEdgeRequests = new ArrayList<>();
+
+        //separando fog e edge deploy requests
+        deployMap.forEach((hostUuid, rules) -> {
+            String level = rules.get(0).getLevel();
+            if (level.equals("FOG")) {
+                DeployFogRequest deployFogRequest = new DeployFogRequest();
+                deployFogRequest.setHostUuid(hostUuid);
+                deployFogRequest.setFogRules(rules);
+                rules.forEach(rule -> {
+                    if (rule.getLevel().equals(rule.getTarget()))
+                        rule.setWebhookUrl(eventProcessNetwork.getWebhookUrl());
+                });
+                deployFogRequests.add(deployFogRequest);
+            } else if (level.equals("EDGE")) {
+                DeployEdgeRequest deployEdgeRequest = new DeployEdgeRequest();
+                deployEdgeRequest.setHostUuid(hostUuid);
+                deployEdgeRequest.setEdgeRules(rules);
+                rules.forEach(rule -> {
+                    if (rule.getLevel().equals(rule.getTarget()))
+                        rule.setWebhookUrl(eventProcessNetwork.getWebhookUrl());
+                });
+                deployEdgeRequests.add(deployEdgeRequest);
+            } else if (level.equals("CLOUD")) {
+                //TODO cloud deploy
+            }
+        });
+
+        //setting edge deploy requests to fog deploy requests
+        deployFogRequests.forEach(deployFogRequest -> {
+            deployFogRequest.setEdgeRulesDeployRequests(deployEdgeRequests);
+            deploys.forEach(deploy -> {
+                if (deploy.getLevel().equals("EDGE") && deploy.getParentHostUuid() == null)
+                    deploy.setParentHostUuid(deployFogRequest.getHostUuid());
+            });
+        });
+
         //sending deploy requests to fog gateways
         for (DeployFogRequest deployFogRequest : deployFogRequests) {
             IoTGatewayRequestResponse ioTGatewayRequestResponse = ioTCatalogerConnector.getGateway(deployFogRequest.getHostUuid());
             RestTemplate restTemplate = new RestTemplate();
-            DeployResponse[] deployResponses = restTemplate.postForObject(ioTGatewayRequestResponse.getUrl() + "/deploy", deployFogRequest, DeployResponse[].class);
-
-            //setting status to done and deploy uuid
-            deploys.forEach(deploy -> {
-                for (DeployResponse deployResponse : deployResponses) {
-                    if (deploy.getRuleUuid().equals(deployResponse.getRuleUuid())) {
-                        deploy.setStatus(deployResponse.getStatus());
-                        deploy.setDeployUuid(deployResponse.getDeployUuid());
-                    }
-                }
-            });
+            restTemplate.postForObject(ioTGatewayRequestResponse.getUrl() + "/deploy", deployFogRequest, DeployResponse[].class);
         }
 
         //save all deploys
@@ -108,8 +108,6 @@ public class DeployService {
     }
 
     public void undeploy(List<Deploy> deploys) {
-        RestTemplate restTemplate = new RestTemplate();
-
         List<UndeployFogRequest> undeployFogRequests = new ArrayList<>();
 
         Map<String, List<String>> undeployFogMap = new HashMap<>();
@@ -150,6 +148,20 @@ public class DeployService {
             IoTGatewayRequestResponse ioTGatewayRequestResponse = ioTCatalogerConnector.getGateway(entry.getKey());
             restTemplate.postForObject(ioTGatewayRequestResponse.getUrl() + "/undeploy", undeployFogRequests, DeployResponse[].class);
         }
+    }
+
+    public void undeploy(UndeployFogRequest undeployFogRequest) {
+        //arraylist to send to fog gateway because it is expecting an array
+        ArrayList<UndeployFogRequest> undeployFogRequests = new ArrayList<>();
+        undeployFogRequests.add(undeployFogRequest);
+
+        IoTGatewayRequestResponse ioTGatewayRequestResponse = ioTCatalogerConnector.getGateway(undeployFogRequest.getHostUuid());
+        restTemplate.postForObject(ioTGatewayRequestResponse.getUrl() + "/undeploy", undeployFogRequests, DeployResponse[].class);
+    }
+
+    public void deploy(DeployFogRequest deployFogRequest) {
+        IoTGatewayRequestResponse ioTGatewayRequestResponse = ioTCatalogerConnector.getGateway(deployFogRequest.getHostUuid());
+        restTemplate.postForObject(ioTGatewayRequestResponse.getUrl() + "/deploy", deployFogRequest, DeployResponse[].class);
     }
 
     public void save(Deploy deploy) {

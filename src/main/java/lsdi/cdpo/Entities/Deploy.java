@@ -15,6 +15,7 @@ public class Deploy {
     private String hostUuid;
     private String ruleUuid;
     private String deployUuid;
+    private String parentHostUuid;
     private String level;
     private String status;
 }

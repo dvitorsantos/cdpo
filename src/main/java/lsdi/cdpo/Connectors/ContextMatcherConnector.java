@@ -1,6 +1,7 @@
 package lsdi.cdpo.Connectors;
 
 import lsdi.cdpo.DataTransferObjects.EpnRequestResponse;
+import lsdi.cdpo.DataTransferObjects.RuleRequestResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -19,5 +20,10 @@ public class ContextMatcherConnector {
     public EpnRequestResponse findMatchesToEpn(EpnRequestResponse epn) {
         String requestUrl = this.getUrl() + "match/find/nodes_to_epn";
         return restTemplate.postForObject(requestUrl, epn, EpnRequestResponse.class);
+    }
+
+    public RuleRequestResponse findRule(String uuid) {
+        String requestUrl = this.getUrl() + "rule/" + uuid;
+        return restTemplate.getForObject(requestUrl, RuleRequestResponse.class);
     }
 }

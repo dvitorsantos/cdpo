@@ -9,8 +9,8 @@ import java.util.List;
 
 @Data
 public class UndeployFogRequest extends UndeployRequest {
-    @JsonProperty("edge_rules_deploy_uuids")
-    public List<String> edgeRulesDeployUuids;
     @JsonProperty("fog_rules_deploy_uuids")
     public List<String> fogRulesDeployUuids;
+    @JsonProperty("edge_rules_deploy_uuids")
+    public List<String> edgeRulesDeployUuids;
 }
