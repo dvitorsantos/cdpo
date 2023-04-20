@@ -39,8 +39,6 @@ public class DeployController {
 
         return epnRequestResponse;
     }
-
-
     @PostMapping("/undeploy/{epnCommitId}")
     public void undeploy(@PathVariable String epnCommitId) {
         List<Deploy> deploys = deployService.findAllByEpnCommitId(epnCommitId);
@@ -74,6 +72,7 @@ public class DeployController {
         if (deploy.getParentHostUuid() != null) {
             DeployEdgeRequest deployEdgeRequest = new DeployEdgeRequest();
             deployEdgeRequest.setEdgeRules(new ArrayList<>(List.of(ruleRequestResponse)));
+            deployEdgeRequest.setHostUuid(deploy.getHostUuid());
             deployFogRequest.setHostUuid(deploy.getParentHostUuid());
             deployFogRequest.setEdgeRulesDeployRequests(new ArrayList<>(List.of(deployEdgeRequest)));
             deployFogRequest.setFogRules(new ArrayList<>());
