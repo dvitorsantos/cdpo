@@ -16,4 +16,8 @@ public interface DeployRepository extends JpaRepository<Deploy, String> {
     List<Deploy> findAllByEpnCommitId(String epnUuid);
 
     Deploy findByRuleUuid(String ruleUuid);
+
+    List<Deploy> findAllByRuleUuid(String ruleUuid);
+
+    List<Deploy> findAllByHostUuidAndRuleUuid(String hostUuid, String ruleUuid);
 }

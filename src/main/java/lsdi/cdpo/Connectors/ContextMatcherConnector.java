@@ -22,8 +22,8 @@ public class ContextMatcherConnector {
         return restTemplate.postForObject(requestUrl, epn, EpnRequestResponse.class);
     }
 
-    public RuleRequestResponse findRule(String uuid) {
-        String requestUrl = this.getUrl() + "rule/" + uuid;
+    public RuleRequestResponse findRuleByHostUuidAndRuleUuid(String hostUuid, String ruleUuid) {
+        String requestUrl = this.getUrl() + "rule/" + hostUuid + "/" + ruleUuid;
         return restTemplate.getForObject(requestUrl, RuleRequestResponse.class);
     }
 }

@@ -172,6 +172,14 @@ public class DeployService {
         return deployRepository.findByRuleUuid(ruleUuid);
     }
 
+    public List<Deploy> findAllByRuleUuid(String ruleUuid) {
+        return deployRepository.findAllByRuleUuid(ruleUuid);
+    }
+
+    public List<Deploy> findAllByHostUuidAndRuleUuid(String hostUuid, String ruleUuid) {
+        return deployRepository.findAllByHostUuidAndRuleUuid(hostUuid, ruleUuid);
+    }
+
     public List<Deploy> findAllByEpnCommitId(String epnCommitId) {
         return deployRepository.findAllByEpnCommitId(epnCommitId);
     }
