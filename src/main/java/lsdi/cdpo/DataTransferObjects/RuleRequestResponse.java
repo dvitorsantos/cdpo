@@ -34,6 +34,7 @@ public class RuleRequestResponse {
     @Nullable
     @JsonProperty("webhook_url")
     String webhookUrl;
+    @Nullable
     RequirementsRequestResponse requirements;
     public Rule toEntity(){
         Rule rule = new Rule();

@@ -4,7 +4,7 @@ import lombok.Data;
 
 @Data
 public class LocationAreaRequestResponse {
-    private String area;
+    private String radius;
     private String latitude;
     private String longitude;
 }

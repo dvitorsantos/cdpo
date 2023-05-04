@@ -8,6 +8,7 @@ import lsdi.cdpo.DataTransferObjects.Deploy.DeployResponse;
 import lsdi.cdpo.DataTransferObjects.Undeploy.UndeployFogRequest;
 import lsdi.cdpo.DataTransferObjects.Undeploy.UndeployRequest;
 import lsdi.cdpo.Entities.Deploy;
+import lsdi.cdpo.Enums.DeployStatus;
 import lsdi.cdpo.Repositories.DeployRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -53,7 +54,7 @@ public class DeployService {
                 deploy.setHostUuid(hostUuid);
                 deploy.setRuleUuid(rule.getUuid());
                 deploy.setLevel(rule.getLevel());
-                deploy.setStatus("PENDING");
+                deploy.setStatus(DeployStatus.PENDING);
                 deploys.add(deploy);
             });
         });

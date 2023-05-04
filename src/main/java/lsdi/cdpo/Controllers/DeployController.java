@@ -9,7 +9,7 @@ import lsdi.cdpo.DataTransferObjects.EpnRequestResponse;
 import lsdi.cdpo.DataTransferObjects.RuleRequestResponse;
 import lsdi.cdpo.DataTransferObjects.Undeploy.UndeployFogRequest;
 import lsdi.cdpo.Entities.Deploy;
-import lsdi.cdpo.Entities.EventProcessNetwork;
+import lsdi.cdpo.Enums.DeployStatus;
 import lsdi.cdpo.Services.DeployService;
 import lsdi.cdpo.Services.EventProcessNetworkService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,10 +32,8 @@ public class DeployController {
     @PostMapping("/deploy")
     public EpnRequestResponse deploy(@RequestBody EpnRequestResponse epn) {
         EpnRequestResponse epnRequestResponse = contextMatcherConnector.findMatchesToEpn(epn);
-        epnRequestResponse.setWebhookUrl(epn.getWebhookUrl());
         deployService.deploy(epnRequestResponse);
-        EventProcessNetwork eventProcessNetwork = epnRequestResponse.toEntity();
-        eventProcessNetworkService.save(eventProcessNetwork);
+        eventProcessNetworkService.save(epnRequestResponse.toEntity());
 
         return epnRequestResponse;
     }
@@ -49,7 +47,7 @@ public class DeployController {
     public void undeployRule(@PathVariable String hostUuid, @PathVariable String ruleUuid) {
         List<Deploy> deploys = deployService.findAllByHostUuidAndRuleUuid(hostUuid, ruleUuid);
         for (Deploy deploy : deploys) {
-            deploy.setStatus("UNDEPLOYED");
+            deploy.setStatus(DeployStatus.UNDEPLOYED);
             UndeployFogRequest undeployFogRequest = new UndeployFogRequest();
             if (deploy.getParentHostUuid() != null) {
                 undeployFogRequest.setHostUuid(deploy.getParentHostUuid());
@@ -70,7 +68,7 @@ public class DeployController {
         List<Deploy> deploys = deployService.findAllByHostUuidAndRuleUuid(hostUuid, ruleUuid);
 
         for (Deploy deploy : deploys) {
-            deploy.setStatus("DEPLOYED");
+            deploy.setStatus(DeployStatus.DEPLOYED);
             DeployFogRequest deployFogRequest = new DeployFogRequest();
             RuleRequestResponse ruleRequestResponse = contextMatcherConnector.findRuleByHostUuidAndRuleUuid(hostUuid, ruleUuid);
             if (deploy.getParentHostUuid() != null) {

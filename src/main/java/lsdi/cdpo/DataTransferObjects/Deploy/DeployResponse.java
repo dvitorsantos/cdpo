@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lsdi.cdpo.Enums.DeployStatus;
 
 @Data
 @AllArgsConstructor
@@ -14,7 +15,7 @@ public class DeployResponse {
     @JsonProperty("rule_uuid")
     public String ruleUuid;
     @JsonProperty("status")
-    public String status;
+    public DeployStatus status;
     @JsonProperty("host_uuid")
     public String hostUuid;
 }
