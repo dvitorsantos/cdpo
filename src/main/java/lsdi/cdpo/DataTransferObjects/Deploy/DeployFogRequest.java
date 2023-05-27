@@ -10,6 +10,8 @@ import java.util.List;
 public class DeployFogRequest extends DeployRequest {
     @JsonProperty("edge_rules_deploy_requests")
     public List<DeployEdgeRequest> edgeRulesDeployRequests;
+    @JsonProperty("cloud_rules_deploy_requests")
+    public List<DeployCloudRequest> cloudRulesDeployRequests;
     @JsonProperty("fog_rules")
     public List<RuleRequestResponse> fogRules;
 }

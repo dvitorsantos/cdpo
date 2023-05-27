@@ -29,7 +29,6 @@ public class EpnRequestResponse {
     @Nullable
     @JsonProperty("webhook_url")
     String webhookUrl;
-
     public EventProcessNetwork toEntity() {
         EventProcessNetwork eventProcessNetwork = new EventProcessNetwork();
         eventProcessNetwork.setUuid(this.uuid);

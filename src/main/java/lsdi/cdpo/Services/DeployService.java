@@ -2,6 +2,7 @@ package lsdi.cdpo.Services;
 
 import lsdi.cdpo.Connectors.IoTCatalogerConnector;
 import lsdi.cdpo.DataTransferObjects.*;
+import lsdi.cdpo.DataTransferObjects.Deploy.DeployCloudRequest;
 import lsdi.cdpo.DataTransferObjects.Deploy.DeployEdgeRequest;
 import lsdi.cdpo.DataTransferObjects.Deploy.DeployFogRequest;
 import lsdi.cdpo.DataTransferObjects.Deploy.DeployResponse;
@@ -61,6 +62,7 @@ public class DeployService {
 
         List<DeployFogRequest> deployFogRequests = new ArrayList<>();
         List<DeployEdgeRequest> deployEdgeRequests = new ArrayList<>();
+        List<DeployCloudRequest> deployCloudRequests = new ArrayList<>();
 
         //separando fog e edge deploy requests
         deployMap.forEach((hostUuid, rules) -> {
@@ -84,15 +86,25 @@ public class DeployService {
                 });
                 deployEdgeRequests.add(deployEdgeRequest);
             } else if (level.equals("CLOUD")) {
-                //TODO cloud deploy
+                DeployCloudRequest deployCloudRequest = new DeployCloudRequest();
+                deployCloudRequest.setHostUuid(hostUuid);
+                deployCloudRequest.setCloudRules(rules);
+                rules.forEach(rule -> {
+                    if (rule.getLevel().equals(rule.getTarget()))
+                        rule.setWebhookUrl(eventProcessNetwork.getWebhookUrl());
+                });
+                deployCloudRequests.add(deployCloudRequest);
             }
         });
 
         //setting edge deploy requests to fog deploy requests
         deployFogRequests.forEach(deployFogRequest -> {
             deployFogRequest.setEdgeRulesDeployRequests(deployEdgeRequests);
+            deployFogRequest.setCloudRulesDeployRequests(deployCloudRequests);
             deploys.forEach(deploy -> {
                 if (deploy.getLevel().equals("EDGE") && deploy.getParentHostUuid() == null)
+                    deploy.setParentHostUuid(deployFogRequest.getHostUuid());
+                if (deploy.getLevel().equals("CLOUD") && deploy.getParentHostUuid() == null)
                     deploy.setParentHostUuid(deployFogRequest.getHostUuid());
             });
         });

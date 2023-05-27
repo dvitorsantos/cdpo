@@ -36,6 +36,7 @@ public class RuleRequestResponse {
     String webhookUrl;
     @Nullable
     RequirementsRequestResponse requirements;
+    String outputEventType;
     public Rule toEntity(){
         Rule rule = new Rule();
         rule.setUuid(this.uuid);
@@ -46,6 +47,7 @@ public class RuleRequestResponse {
         rule.setTarget(this.target);
         rule.setDefinition(this.definition);
         rule.setQos(this.qos);
+        rule.setOutputEventType(this.outputEventType);
 
         EventType eventType = new EventType();
         eventType.setName(this.getEventType());

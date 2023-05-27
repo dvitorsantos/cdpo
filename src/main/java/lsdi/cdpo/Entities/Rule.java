@@ -25,4 +25,5 @@ public class Rule {
     private EventProcessNetwork eventProcessNetwork;
     @OneToMany(mappedBy = "rule", cascade = CascadeType.ALL)
     private List<EventType> eventType;
+    private String outputEventType;
 }
