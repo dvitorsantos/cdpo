@@ -26,7 +26,9 @@ public class EpnRequestResponse {
     Boolean atomic;
     @Nullable
     List<MatchRequestResponse> matches;
-
+    @Nullable
+    @JsonProperty("webhook_url")
+    String webhookUrl;
     public EventProcessNetwork toEntity() {
         EventProcessNetwork eventProcessNetwork = new EventProcessNetwork();
         eventProcessNetwork.setUuid(this.uuid);
@@ -35,6 +37,7 @@ public class EpnRequestResponse {
         eventProcessNetwork.setEnabled(this.enabled);
         eventProcessNetwork.setQos(this.qos);
         eventProcessNetwork.setAtomic(this.atomic);
+        eventProcessNetwork.setWebhookUrl(this.webhookUrl);
         List<Rule> rules = this.getRules().stream().map(RuleRequestResponse::toEntity).toList();
         rules.forEach(rule -> rule.setEventProcessNetwork(eventProcessNetwork));
         eventProcessNetwork.setRules(rules);

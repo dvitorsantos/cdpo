@@ -21,6 +21,7 @@ public class EventProcessNetwork {
     private Boolean enabled;
     private String qos;
     private Boolean atomic;
+    private String webhookUrl;
     @OneToMany(mappedBy = "eventProcessNetwork", cascade = CascadeType.ALL)
     private List<Rule> rules;
 }
