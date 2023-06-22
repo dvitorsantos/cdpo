@@ -2,10 +2,7 @@ package lsdi.cdpo.Services;
 
 import lsdi.cdpo.Connectors.IoTCatalogerConnector;
 import lsdi.cdpo.DataTransferObjects.*;
-import lsdi.cdpo.DataTransferObjects.Deploy.DeployCloudRequest;
-import lsdi.cdpo.DataTransferObjects.Deploy.DeployEdgeRequest;
-import lsdi.cdpo.DataTransferObjects.Deploy.DeployFogRequest;
-import lsdi.cdpo.DataTransferObjects.Deploy.DeployResponse;
+import lsdi.cdpo.DataTransferObjects.Deploy.*;
 import lsdi.cdpo.DataTransferObjects.Undeploy.UndeployFogRequest;
 import lsdi.cdpo.DataTransferObjects.Undeploy.UndeployRequest;
 import lsdi.cdpo.Entities.Deploy;
@@ -61,8 +58,8 @@ public class DeployService {
         });
 
         List<DeployFogRequest> deployFogRequests = new ArrayList<>();
-        List<DeployEdgeRequest> deployEdgeRequests = new ArrayList<>();
-        List<DeployCloudRequest> deployCloudRequests = new ArrayList<>();
+        List<DeployRequest> deployEdgeRequests = new ArrayList<>();
+        List<DeployRequest> deployCloudRequests = new ArrayList<>();
 
         //separando fog e edge deploy requests
         deployMap.forEach((hostUuid, rules) -> {
@@ -70,27 +67,27 @@ public class DeployService {
             if (level.equals("FOG")) {
                 DeployFogRequest deployFogRequest = new DeployFogRequest();
                 deployFogRequest.setHostUuid(hostUuid);
-                deployFogRequest.setFogRules(rules);
+                deployFogRequest.setRules(rules);
                 rules.forEach(rule -> {
-                    if (rule.getLevel().equals(rule.getTarget()))
+                    if (rule.getLevel().equals("WEBHOOK"))
                         rule.setWebhookUrl(eventProcessNetwork.getWebhookUrl());
                 });
                 deployFogRequests.add(deployFogRequest);
             } else if (level.equals("EDGE")) {
-                DeployEdgeRequest deployEdgeRequest = new DeployEdgeRequest();
+                DeployRequest deployEdgeRequest = new DeployRequest();
                 deployEdgeRequest.setHostUuid(hostUuid);
-                deployEdgeRequest.setEdgeRules(rules);
+                deployEdgeRequest.setRules(rules);
                 rules.forEach(rule -> {
-                    if (rule.getLevel().equals(rule.getTarget()))
+                    if (rule.getLevel().equals("WEBHOOK"))
                         rule.setWebhookUrl(eventProcessNetwork.getWebhookUrl());
                 });
                 deployEdgeRequests.add(deployEdgeRequest);
             } else if (level.equals("CLOUD")) {
-                DeployCloudRequest deployCloudRequest = new DeployCloudRequest();
+                DeployRequest deployCloudRequest = new DeployRequest();
                 deployCloudRequest.setHostUuid(hostUuid);
-                deployCloudRequest.setCloudRules(rules);
+                deployCloudRequest.setRules(rules);
                 rules.forEach(rule -> {
-                    if (rule.getLevel().equals(rule.getTarget()))
+                    if (rule.getLevel().equals("WEBHOOK"))
                         rule.setWebhookUrl(eventProcessNetwork.getWebhookUrl());
                 });
                 deployCloudRequests.add(deployCloudRequest);
@@ -99,12 +96,9 @@ public class DeployService {
 
         //setting edge deploy requests to fog deploy requests
         deployFogRequests.forEach(deployFogRequest -> {
-            deployFogRequest.setEdgeRulesDeployRequests(deployEdgeRequests);
-            deployFogRequest.setCloudRulesDeployRequests(deployCloudRequests);
+            deployFogRequest.setEdgeDeployRequests(deployEdgeRequests);
             deploys.forEach(deploy -> {
                 if (deploy.getLevel().equals("EDGE") && deploy.getParentHostUuid() == null)
-                    deploy.setParentHostUuid(deployFogRequest.getHostUuid());
-                if (deploy.getLevel().equals("CLOUD") && deploy.getParentHostUuid() == null)
                     deploy.setParentHostUuid(deployFogRequest.getHostUuid());
             });
         });
@@ -114,6 +108,13 @@ public class DeployService {
             IoTGatewayRequestResponse ioTGatewayRequestResponse = ioTCatalogerConnector.getGateway(deployFogRequest.getHostUuid());
             RestTemplate restTemplate = new RestTemplate();
             restTemplate.postForObject(ioTGatewayRequestResponse.getUrl() + "/deploy", deployFogRequest, DeployResponse[].class);
+        }
+
+        //sending deploy requests to cloud gateways
+        for (DeployRequest deployCloudRequest : deployCloudRequests) {
+            IoTGatewayRequestResponse ioTGatewayRequestResponse = ioTCatalogerConnector.getGateway(deployCloudRequest.getHostUuid());
+            RestTemplate restTemplate = new RestTemplate();
+            restTemplate.postForObject(ioTGatewayRequestResponse.getUrl() + "/deploy", deployCloudRequest, DeployResponse[].class);
         }
 
         //save all deploys

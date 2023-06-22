@@ -4,6 +4,7 @@ import lsdi.cdpo.Connectors.ContextMatcherConnector;
 
 import lsdi.cdpo.DataTransferObjects.Deploy.DeployEdgeRequest;
 import lsdi.cdpo.DataTransferObjects.Deploy.DeployFogRequest;
+import lsdi.cdpo.DataTransferObjects.Deploy.DeployRequest;
 import lsdi.cdpo.DataTransferObjects.Deploy.DeployResponse;
 import lsdi.cdpo.DataTransferObjects.EpnRequestResponse;
 import lsdi.cdpo.DataTransferObjects.RuleRequestResponse;
@@ -72,16 +73,16 @@ public class DeployController {
             DeployFogRequest deployFogRequest = new DeployFogRequest();
             RuleRequestResponse ruleRequestResponse = contextMatcherConnector.findRuleByHostUuidAndRuleUuid(hostUuid, ruleUuid);
             if (deploy.getParentHostUuid() != null) {
-                DeployEdgeRequest deployEdgeRequest = new DeployEdgeRequest();
-                deployEdgeRequest.setEdgeRules(new ArrayList<>(List.of(ruleRequestResponse)));
+                DeployRequest deployEdgeRequest = new DeployEdgeRequest();
+                deployEdgeRequest.setRules(new ArrayList<>(List.of(ruleRequestResponse)));
                 deployEdgeRequest.setHostUuid(deploy.getHostUuid());
                 deployFogRequest.setHostUuid(deploy.getParentHostUuid());
-                deployFogRequest.setEdgeRulesDeployRequests(new ArrayList<>(List.of(deployEdgeRequest)));
-                deployFogRequest.setFogRules(new ArrayList<>());
+                deployFogRequest.setEdgeDeployRequests(new ArrayList<>(List.of(deployEdgeRequest)));
+                deployFogRequest.setRules(new ArrayList<>());
             } else {
                 deployFogRequest.setHostUuid(deploy.getHostUuid());
-                deployFogRequest.setEdgeRulesDeployRequests(new ArrayList<>());
-                deployFogRequest.setFogRules(new ArrayList<>(List.of(ruleRequestResponse)));
+                deployFogRequest.setEdgeDeployRequests(new ArrayList<>());
+                deployFogRequest.setRules(new ArrayList<>(List.of(ruleRequestResponse)));
             }
 
             deployService.deploy(deployFogRequest);
