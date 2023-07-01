@@ -69,7 +69,7 @@ public class DeployService {
                 deployFogRequest.setHostUuid(hostUuid);
                 deployFogRequest.setRules(rules);
                 rules.forEach(rule -> {
-                    if (rule.getLevel().equals("WEBHOOK"))
+                    if (rule.getTarget().equals("WEBHOOK"))
                         rule.setWebhookUrl(eventProcessNetwork.getWebhookUrl());
                 });
                 deployFogRequests.add(deployFogRequest);
@@ -78,7 +78,7 @@ public class DeployService {
                 deployEdgeRequest.setHostUuid(hostUuid);
                 deployEdgeRequest.setRules(rules);
                 rules.forEach(rule -> {
-                    if (rule.getLevel().equals("WEBHOOK"))
+                    if (rule.getTarget().equals("WEBHOOK"))
                         rule.setWebhookUrl(eventProcessNetwork.getWebhookUrl());
                 });
                 deployEdgeRequests.add(deployEdgeRequest);
@@ -87,7 +87,7 @@ public class DeployService {
                 deployCloudRequest.setHostUuid(hostUuid);
                 deployCloudRequest.setRules(rules);
                 rules.forEach(rule -> {
-                    if (rule.getLevel().equals("WEBHOOK"))
+                    if (rule.getTarget().equals("WEBHOOK"))
                         rule.setWebhookUrl(eventProcessNetwork.getWebhookUrl());
                 });
                 deployCloudRequests.add(deployCloudRequest);
