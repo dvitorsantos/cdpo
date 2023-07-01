@@ -2,6 +2,7 @@ package lsdi.cdpo.DataTransferObjects.Deploy;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
+import lsdi.cdpo.DataTransferObjects.RuleRequestResponse;
 import org.springframework.lang.Nullable;
 
 import java.util.List;
@@ -14,4 +15,5 @@ public class DeployRequest {
     @Nullable
     @JsonProperty("webhook_url")
     public String webhookUrl;
+    public List<RuleRequestResponse> rules;
 }
